@@ -8,9 +8,9 @@
 int main()
 {
 	key_t key = 1234;
-	int (*mat)[10];
+	//int (*mat)[10];
 	int shmid = shmget(key, sizeof(int[10][10]), IPC_CREAT | 0666);
-	mat = shmat(shmid, NULL, 0);
+	int *mat = (int *)shmat(shmid, NULL, 0);
 	int matrix1[10][10];
 	int matrix2[10][10];
 	int matrix[10][10];
@@ -52,14 +52,16 @@ int main()
 		}
 		printf("\n");
 	}
-	//for(int i = 0; i < 4; i++)
-	//{
-	//	for(int j = 0; j < 6; j++)
-	//	{
-	//		mat[i * 6 + j] = matrix[i][j];
-	//	}
-	//}
-	//shmdt(mat);
-	//shmctl(shmid, IPC_RMID, NULL);
+	for(int i = 0; i < 4; i++)
+	{
+		for(int j = 0; j < 6; j++)
+		{
+			//mat[i * 6 + j] = matrix[i][j];
+			matrix[i][j] = mat[i * 6 + j];
+		}
+	}
+	sleep(10);
+	shmdt(mat);
+	shmctl(shmid, IPC_RMID, NULL);
 }
 
