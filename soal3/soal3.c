@@ -78,26 +78,6 @@ void *move(void *argument) {
         strcat(destpath, "/");
         strcat(destpath, filename);
 
-        // FILE *src, *dest;
-        // src = fopen(srcpath, "rb");
-        // dest = fopen(destpath, "wb");
-        
-        // if (src != NULL && dest != NULL){
-        //     char ch;
-        //     while((ch=fgetc(src)) != EOF){
-        //         fputc(ch, dest);
-        //     }
-        // } else {
-        //     flag = 1;
-        // }
-
-        // fclose(src);
-        // fclose(dest);
-
-        // if (remove(srcpath) != 0){
-        //     flag = 1;
-        // }
-
         if (rename(srcpath, destpath) != 0){
             flag = 1;
         }
