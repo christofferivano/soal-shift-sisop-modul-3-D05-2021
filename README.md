@@ -1,5 +1,175 @@
 # soal-shift-sisop-modul-3-D05-2021
 
+## 2a.
+Membuat program perkalian matrix 4x3 dengan matrix 3x6 dan menampilkan hasilnya. Matriks nantinya akan berisi angka 1-20. Pertama-tama inisialisasi key dan array `*mat` agar dapat digunakan dalam shared memory pada program kedua.
+```
+key_t key = 1234;
+int shmid = shmget(key, sizeof(int) * 4 * 6, IPC_CREAT | 0666);
+int *mat = (int *)shmat(shmid, NULL, 0);
+```
+membuat 2 matrix dengan input dari user untuk perkalian biasa menggunakan for loop. Matrix pertama memiliki besar 4x3, matrix kedua memiliki besar 3x6, dan hasil perkalian matrix memiliki besar 4x6.
+```
+printf("Matrix 1 : [4][3]\n");
+	for(int i = 0; i < 4; i++)
+	{
+		for(int j = 0; j < 3; j++)
+		{
+			scanf("%d", &matrix1[i][j]);
+		}
+	}
+	printf("Matrix 2 : [3][6]\n");
+	for(int i = 0; i < 3; i++)
+	{
+		for(int j = 0; j < 6; j++)
+		{
+			scanf("%d", &matrix2[i][j]);
+		}
+	}
+	int hasil = 0;
+	for(int i = 0; i < 4; i++)
+	{
+		for(int j = 0; j < 6; j++)
+		{
+			for(int k = 0; k < 3; k++)
+			{
+				hasil += matrix1[i][k] * matrix2[k][j];
+			}
+			matrix[i][j] = hasil;
+			hasil = 0;
+		}
+	}
+```
+Selanjutnya memasukkan value dari matrix yang telah dikali ke array yang akan digunakan dalam shared memory yaitu matrix `mat`.
+```
+for(int i = 0; i < 4; i++)
+	{
+		for(int j = 0; j < 6; j++)
+		{
+			//mat[i * 6 + j] = matrix[i][j];
+			matrix[i][j] = mat[i * 6 + j];
+		}
+	}
+```
+Lalu, jalankan program 2b.
+```
+printf("Run Program 2b.\n");
+for(int i = 30; i > 0; i--)
+{
+	printf("%d...\n", i);
+	sleep(1);
+}
+```
+![image](https://user-images.githubusercontent.com/73484021/119261173-70988e00-bc00-11eb-8709-3707285d1997.png)
+
+## 2b
+Membuat program dengan menggunakan matriks output dari program sebelumnya (program soal2a.c). Kemudian matriks tersebut akan dilakukan perhitungan dengan matrix baru (input user) sebagai berikut contoh perhitungan untuk matriks yang ada. Perhitungannya adalah setiap cel yang berasal dari matriks A menjadi angka untuk faktorial, lalu cel dari matriks B menjadi batas maksimal faktorialnya.
+
+Pertama-tama menginisialisasi key dan arr agar dapat digunakan shared memorynya dari program pertama, lalu assign valuenya pada matrix lokal pada program ke 2.
+```
+key_t key = 1234;
+int shmid = shmget(key, sizeof(int) * 4 * 6, IPC_CREAT | 0666);
+int *mat = (int *)shmat(shmid, NULL, 0);
+int matrix[4][6];
+for(int i = 0; i < 4; i++)
+{
+	for(int j = 0; j < 6; j++)
+	{
+		matrix[i][j] = mat[i * 6 + j];
+	}
+}
+```
+Selanjutnya menginputkan matrix untuk melakukan perhitungan angka faktorial sesuai besar matrix hasil perkalian.
+```
+int matBaru[4][6];
+printf("Masukkan nilai matrix[4][6] ; \n");
+for(int i = 0; i < 4; i++)
+{
+	for(int j = 0; j < 6; j++)
+	{
+		scanf("%d", &matBaru[i][j]);
+	}
+}
+```
+Lalu untuk setiap kotak matrix inputan, dilakukan perbandingan terhadap matrix hasil perkalian dari program 1 dan dilakukan perhitungan angka faktorialnya sesuai permintaan soal.
+```
+printf("Output Matrix : \n");
+	for(int i = 0; i < 4; i++)
+	{
+		for(int j = 0; j < 6; j++)
+		{
+			if(matrix[i][j] >= matBaru[i][j])
+			{
+				x = matrix[i][j];
+				y = matBaru[i][j];
+				stemps.temp1 = x;
+				stemps.temp2 = y;
+			}
+			else if(matBaru[i][j] > matrix[i][j])
+			{
+				x = matrix[i][j];
+				stemps.temp1 = x;
+				stemps.temp2 = x;
+			}
+			else if(matrix[i][j] == 0)
+			{
+				stemps.temp1 = 0;
+				stemps.temp2 = 0;
+			}
+			pthread_create(&tid[flag], NULL, &func, (void *)&stemps);
+			pthread_join(tid[flag], NULL);
+			flag++;
+		}
+		printf("n");
+	}
+```
+Untuk fungsi yang dipakai yaitu pertama `void printFact(int x, int y)`, yaitu untuk melakukan print hasil faktorial, x sebagai batas atasnya dan x-y sebagai batas bawahnya.
+```
+void printFact(int x, int y)
+{
+	int bawah = x - y;
+	int hasil = 1;
+	printf("[");
+	if(x == 0 || y == 0)
+	{
+		printf("0");
+	}
+	else
+	{
+		for(int i = x; i > 0; i--, x--)
+		{
+			if(i == bawah)
+			{
+				break;
+			}
+			else
+			{
+				hasil *= x;
+			}
+		}
+		printf("%d", hasil);
+	}
+	printf("] ");
+}
+```
+Lalu untuk fungsi yang memanggil fungsi `void printFact(int, int)` tadi dalam bentuk thread merupakan fungsi `void *func(void temps)`, yaitu:
+```
+void *func(void *temps)
+{
+	struct stemp *stemps = (struct stemp *)temps;
+	printFact(stemps->temp1, stemps->temp2);
+}
+```
+Didalam fungsi ini menggunakan struct sebagai argumen karena pada parameter fungsi menggunakan lebih dari 1 variabel, yaitu x dan y. Struct didefinisikan di awal program, yaitu:
+```
+struct stemp
+{
+	int temp1;
+	int temp2;
+};
+```
+![image](https://user-images.githubusercontent.com/73484021/119262031-f8cc6280-bc03-11eb-94dc-160274cb0170.png)
+Kesulitan yang dialami pada soal ini adalah saat ingin memindahkan isi dari array di program pertama ke program kedua. Hal ini terjadi karena saya salah menginputkan parameter pada salah satu fungsi shared memorynya.
+
 ## 3. Mengategorikan File
 Pada soal ini, kita diminta untuk mengategorikan file berdasarkan nama eksistensi file dengan memanfaatkan `multithreading`. File-file ini akan dipindahkan ke dalam `folder` yang berada di dalam `current working directory` dengan nama `eksistensi file` tersebut. Nama folder (eksistensi file) diambil dari `titik terdepan` nama file tersebut dan `tidak case sensitive`, sehingga abc.tar.gz akan berada di dalam folder yg sama dengan bcd.TAR.GZ. Kemudian, jika file tersebut tidak memiliki eksistensi, maka akan dimasukkan ke dalam folder `Unknown` dan jika file tersebut merupakan file hidden, maka file tersebut akan dimasukkan ke dalan folder `Hidden`.
 
@@ -337,7 +507,8 @@ int main(int argc, char **argv) {
 ```
 
 Sehingga dengan menjalankan ketiga pertintah tersebut, dapat diperoleh hasil sebagai berikut.
-
+![image](https://user-images.githubusercontent.com/73484021/119262171-78f2c800-bc04-11eb-95f2-aa65250fd326.png)
+![image](https://user-images.githubusercontent.com/73484021/119262189-8740e400-bc04-11eb-9de7-81dee93fbffb.png)
 
 Adapun kendala yang dialami selama pengerjaan soal ini adalah sebagai berikut.
 1. Apabila dipindahkan secara manual menjadi binary file, maka ada beberapa tipe file yang tidak dapat dibuka.
