@@ -13,16 +13,19 @@ struct stemp
 
 int faktorial(int x)
 {
-	for(int i = x; x > 0; i--)
+	printf("%d", x);
+	if(x <= 1)
 	{
-		printf("%d", x);
+		return 1;
 	}
+	return x * faktorial(x - 1);
 }
 
-void print(int x, int y)
+void printFact(int x, int y)
 {
-	int flag = 0;
+	//int flag = 0;
 	int bawah = x - y;
+	int hasil = 1;
 	printf("[");
 	if(x == 0 || y == 0)
 	{
@@ -38,30 +41,33 @@ void print(int x, int y)
 			}
 			else
 			{
-				printf("%d", x);
+				//printf("%d", x);
+				hasil *= x;
 			}
-			if(flag != y - 1)
-			{
-				printf("*");
-				flag++;
-			}
+			//if(flag != y - 1)
+			//{
+			//	printf("*");
+			//	flag++;
+			//}
 		}
+		printf("%d", hasil);
 	}
+	printf("] ");
 }
 
-void *func(void *temp)
+void *func(void *temps)
 {
-	struct stemp *stemp = (struct stemp *) temp;
-	print(stemp->temp1, stemp->temp2);
+	struct stemp *stemps = (struct stemp *)temps;
+	printFact(stemps->temp1, stemps->temp2);
 }
 
 void main()
 {
 	key_t key = 1234;
 	//int (*mat)[10];
-	int shmid = shmget(key, sizeof(int[10][10]), IPC_CREAT | 0666);
+	int shmid = shmget(key, sizeof(int) * 4 * 6, IPC_CREAT | 0666);
 	int *mat = (int *)shmat(shmid, NULL, 0);
-	int matrix[10][10];
+	int matrix[4][6];
 	for(int i = 0; i < 4; i++)
 	{
 		for(int j = 0; j < 6; j++)
@@ -78,7 +84,7 @@ void main()
 		}
 		printf("\n");
 	}
-	int matBaru[10][10];
+	int matBaru[4][6];
 	printf("Masukkan nilai matrix[4][6] ; \n");
 	for(int i = 0; i < 4; i++)
 	{
@@ -90,7 +96,7 @@ void main()
 	int x, y; 
 	int flag = 0;
 	pthread_t tid[24];
-	struct stemp stemp;
+	struct stemp stemps;
 	printf("Output Matrix : \n");
 	for(int i = 0; i < 4; i++)
 	{
@@ -100,21 +106,21 @@ void main()
 			{
 				x = matrix[i][j];
 				y = matBaru[i][j];
-				stemp.temp1 = x;
-				stemp.temp2 = y;
+				stemps.temp1 = x;
+				stemps.temp2 = y;
 			}
 			else if(matBaru[i][j] > matrix[i][j])
 			{
 				x = matrix[i][j];
-				stemp.temp1 = x;
-				stemp.temp2 = y;
+				stemps.temp1 = x;
+				stemps.temp2 = x;
 			}
 			else if(matrix[i][j] == 0)
 			{
-				stemp.temp1 = 0;
-				stemp.temp2 = 0;
+				stemps.temp1 = 0;
+				stemps.temp2 = 0;
 			}
-			pthread_create(&tid[flag], NULL, &func, (void *)&stemp);
+			pthread_create(&tid[flag], NULL, &func, (void *)&stemps);
 			pthread_join(tid[flag], NULL);
 			flag++;
 		}
